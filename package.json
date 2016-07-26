@@ -1,0 +1,25 @@
+{
+  "name": "node-lvm",
+  "version": "1.0.0",
+  "description": "Simple Node Logical Volume Manager",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IliaIdakiev/node-lvm.git"
+  },
+  "keywords": [
+    "LVM",
+    "Logical",
+    "Volume",
+    "Manager"
+  ],
+  "author": "= <=>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/IliaIdakiev/node-lvm/issues"
+  },
+  "homepage": "https://github.com/IliaIdakiev/node-lvm#readme"
+}
