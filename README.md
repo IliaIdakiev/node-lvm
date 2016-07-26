@@ -1,5 +1,10 @@
 # NODE LVM
 
+Install:
+```
+npm install node-lvm
+```
+
 Usage:
 ```js
 var lvm = require('node-lvm');
