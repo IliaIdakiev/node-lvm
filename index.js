@@ -1,13 +1,13 @@
 const exec = require('child_process').exec;
 
-module.exports = (function() {
+module.exports = (function () {
     'use strict';
 
     var promisify = (func) => new Promise((resolve, reject) => func(resolve, reject));
 
     var handle = (data, resolve, reject) => function handler(err, stdout, stderr) {
-        if(err) { reject(err); return; }
-        if(data && data.result) data.result = stdout;
+        if (err) { reject(err); return; }
+        if (data && data.result) data.result = stdout;
         else data = stdout;
         resolve(data);
     };
@@ -52,7 +52,7 @@ module.exports = (function() {
     * @param physicalVolumeLocation location of the logical volume (ex. /dev)
     * @param data data to be passed to promise resolve func.
     */
-    var mountVolume = (name, groupName, mountPath, physicalVolumeLocation,  data) => promisify((resolve, reject) => exec(`mkdir ${mountPath} && mount -t btrfs ${physicalVolumeLocation}/${groupName}/${name} ${mountPath}`, handle(data, resolve, reject)));
+    var mountVolume = (name, groupName, fileSystem, mountPath, physicalVolumeLocation, data) => promisify((resolve, reject) => exec(`mkdir ${mountPath} && mount -t ${fileSystem} ${physicalVolumeLocation}/${groupName}/${name} ${mountPath}`, handle(data, resolve, reject)));
 
     /**
     * @param name logical volume name
