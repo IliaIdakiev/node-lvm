@@ -24,7 +24,7 @@ lvm.createLogicalVolume('lv_name', 30, 'volume_group_name', { some: 'data' }).th
 lvm.formatLogicalVolume('lv_name', 'volume_group_name', 'ext3', '/dev', { some: 'data' }).then((data) => console.log(data.some));
 
 //5. Mount LV
-lvm.mountVolume('lv_name', 'volume_group_name', '/mnt/mount_point_name', '/dev', { some: 'data' }).then((data) => console.log(data.some));
+lvm.mountVolume('lv_name', 'volume_group_name', 'ext3', '/mnt/mount_point_name', '/dev', { some: 'data' }).then((data) => console.log(data.some));
 
 //6. Extend LV with 5GB
 lvm.extendVolume('lv_name', 'volume_group_name', '/dev', 5, { some: 'data' }).then((data) => console.log(data.some));
