@@ -26,12 +26,10 @@ function spawn(cmd, args, cmdInput) {
     });
 
     procedure.on('error', (error) => {
-      log(error.message);
       reject(error);
     });
 
     procedure.on('exit', (code) => {
-      log(`${cmd} exit code: ${code}, ${errData}`);
       if (code === 0) { resolve(outData || errData); return; }
       reject(errData || outData);
     });
