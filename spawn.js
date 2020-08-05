@@ -14,7 +14,7 @@ function spawn(cmd, args, cmdInput) {
     let errData = '';
 
     if (cmdInput) {
-      procedure.stdin.write(cmdInput);
+      procedure.stdin.end(cmdInput);
     }
 
     procedure.stdout.on('data', chunk => {
