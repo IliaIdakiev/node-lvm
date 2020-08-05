@@ -1,85 +1,106 @@
-const exec = require('child_process').exec;
+'use strict';
+
+const spawn = require('./spawn');
 
 module.exports = (function () {
-    'use strict';
-
-    var promisify = (func) => new Promise((resolve, reject) => func(resolve, reject));
-
-    var handle = (data, resolve, reject) => function handler(err, stdout, stderr) {
-        if (err) { reject(err); return; }
-        if (data && data.result) data.result = stdout;
-        else data = stdout;
-        resolve(data);
-    };
-
-    /*1. Storage devices must be formated as a physical volume before it can participate in the LVM infrastructure (PV)*/
+    function preparePayload(data, prevResult) {
+        return result => ({ data, result: prevResult ? [].concat(prevResult).concat(result) : result })
+    }
+    /*1. Storage devices must be formatted as a physical volume before it can participate in the LVM infrastructure (PV)*/
     /**
-    * @param volumePath one or more space seperated physical volume paths (ex. /dev/std1 /dev/sdd1)
-    * @param data data to be passed to promise resolve func.
+    * @param {string} volumePath one or more space seperated physical volume paths (ex. /dev/std1 /dev/sdd1)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var createPhysicalVolume = (volumePath, data) => promisify((resolve, reject) => exec(`pvcreate ${volumePath}`, handle(data, resolve, reject)));
+    var createPhysicalVolume = (volumePath, data) =>
+        spawn('pvcreate', [volumePath]).then(preparePayload(data));
 
     /*2. Agregate the physical volume(s) into a single contiguous pool of storage - Volume group (VG)*/
     /**
-    * @param name volume group name
-    * @param volumePath one or more space seperated physical volume paths (ex. /dev/std1 /dev/sdd1)
-    * @param data data to be passed to promise resolve func.
+    * @param {string} name volume group name
+    * @param {string} volumePath one or more space separated physical volume paths (ex. /dev/std1 /dev/sdd1)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var createVolumeGroup = (name, volumePath, data) => promisify((resolve, reject) => exec(`vgcreate ${name} ${volumePath}`, handle(data, resolve, reject)));
+    var createVolumeGroup = (name, volumePath, data) =>
+        spawn('vgcreate', [name, volumePath]).then(preparePayload(data));
 
     /*3. Create the logical volume*/
     /**
-    * @param name logical volume name
-    * @param sizeGB size of the LV
-    * @param groupName name of the volume group
-    * @param data data to be passed to promise resolve func.
+    * @param {string} name logical volume name
+    * @param {string|number} sizeGB size of the LV
+    * @param {string} groupName name of the volume group
+    * @param {string} [cmdInput] lvcreate cmd input
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var createLogicalVolume = (name, sizeGB, groupName, data) => promisify((resolve, reject) => exec(`lvcreate -L ${sizeGB}G -n ${name} ${groupName}`, handle(data, resolve, reject)));
+    var createLogicalVolume = (name, sizeGB, groupName, cmdInput, data) =>
+        spawn('lvcreate', ['-L', `${sizeGB}G`, '-n', name, groupName], cmdInput)
+            .then(preparePayload(data));
 
     /**
-    * @param name logical volume name
-    * @param groupName name of the volume group
-    * @param fileSystem type of file system (ex. ext3)
-    * @param physicalVolumeLocation location of the logical volume (ex. /dev)
-    * @param data data to be passed to promise resolve func.
+    * @param {string} name logical volume name
+    * @param {string} groupName name of the volume group
+    * @param {string} fileSystem type of file system (ex. ext3)
+    * @param {string} physicalVolumeLocation location of the logical volume (ex. /dev)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var formatLogicalVolume = (name, groupName, fileSystem, physicalVolumeLocation, data) => promisify((resolve, reject) => exec(`mkfs -t ${fileSystem} ${physicalVolumeLocation}/${groupName}/${name}`, handle(data, resolve, reject)));
+    var formatLogicalVolume = (name, groupName, fileSystem, physicalVolumeLocation, data) =>
+        spawn('mkfs', ['-t', fileSystem, `${physicalVolumeLocation}/${groupName}/${name}`])
+            .then(preparePayload(data))
 
     /**
-    * @param name logical volume name
-    * @param groupName name of the volume group
-    * @param mountPath path of mount point (ex /mnt/name)
-    * @param physicalVolumeLocation location of the logical volume (ex. /dev)
-    * @param data data to be passed to promise resolve func.
+    * @param {string} name logical volume name
+    * @param {string} groupName name of the volume group
+    * @param {string} mountPath path of mount point (ex /mnt/name)
+    * @param {string} physicalVolumeLocation location of the logical volume (ex. /dev)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string[] }>} Promise if resolved it will contain the data that was passed to the fn and the cmd results
     */
-    var mountVolume = (name, groupName, fileSystem, mountPath, physicalVolumeLocation, data) => promisify((resolve, reject) => exec(`mkdir ${mountPath} && mount -t ${fileSystem} ${physicalVolumeLocation}/${groupName}/${name} ${mountPath}`, handle(data, resolve, reject)));
+    var mountVolume = (name, groupName, fileSystem, mountPath, physicalVolumeLocation, data) =>
+        spawn('mkdir', [mountPath]).then(
+            result => spawn('mount', ['-t', fileSystem, `${physicalVolumeLocation}/${groupName}/${name}`, mountPath])
+                .then(preparePayload(data, result))
+        )
 
     /**
-    * @param name logical volume name
-    * @param groupName name of the volume group
-    * @param physicalVolumeLocation location of the logical volume (ex. /dev)
-    * @param newSize add size of volume (larger than the current size)
-    * @param data data to be passed to promise resolve func.
+    * @param {string} name logical volume name
+    * @param {string} groupName name of the volume group
+    * @param {string} physicalVolumeLocation location of the logical volume (ex. /dev)
+    * @param {string|number} newSize add size of volume (larger than the current size)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var extendVolume = (name, groupName, physicalVolumeLocation, newSize, data) => promisify((resolve, reject) => exec(`lvextend -L+${newSize}G ${physicalVolumeLocation}/${groupName}/${name}`, handle(data, resolve, reject)));
+    var extendVolume = (name, groupName, physicalVolumeLocation, newSize, data) =>
+        spawn('lvextend', [`-L+${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
+            .then(preparePayload(data))
 
     /**
-    * @param name logical volume name
-    * @param groupName name of the volume group
-    * @param physicalVolumeLocation location of the logical volume (ex. /dev)
-    * @param newSize remove size of volume (less than the current size)
-    * @param data data to be passed to promise resolve func.
+    * @param {string} name logical volume name
+    * @param {string} groupName name of the volume group
+    * @param {string} physicalVolumeLocation location of the logical volume (ex. /dev)
+    * @param {string|number} newSize remove size of volume (less than the current size)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var reduceVolume = (name, groupName, physicalVolumeLocation, newSize, data) => promisify((resolve, reject) => exec(`lvreduce -f -L-${newSize}G ${physicalVolumeLocation}/${groupName}/${name}`, handle(data, resolve, reject)));
+    var reduceVolume = (name, groupName, physicalVolumeLocation, newSize, data) =>
+        spawn('lvreduce', ['-f', `-L-${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
+            .then(preparePayload(data))
 
     /**
-    * @param mountPath path of mount point (ex /mnt/name)
-    * @param name logical volume name
-    * @param groupName name of the volume group
-    * @param physicalVolumeLocation location of the logical volume (ex. /dev)
-    * @param data data to be passed to promise resolve func.
+    * @param {string} mountPath path of mount point (ex /mnt/name)
+    * @param {string} name logical volume name
+    * @param {string} groupName name of the volume group
+    * @param {string} physicalVolumeLocation location of the logical volume (ex. /dev)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string[] }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var removeVolume = (mountPath, name, groupName, physicalVolumeLocation, data) => promisify((resolve, reject) => exec(`umount ${mountPath} && lvremove -f ${physicalVolumeLocation}/${groupName}/${name}`, handle(data, resolve, reject)));
+    var removeVolume = (mountPath, name, groupName, physicalVolumeLocation, data) =>
+        spawn('umount', [mountPath]).then(
+            result => spawn('lvremove', ['-f', `${physicalVolumeLocation}/${groupName}/${name}`])
+                .then(preparePayload(data, result))
+        )
 
     return {
         createPhysicalVolume,
