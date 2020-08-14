@@ -72,8 +72,20 @@ module.exports = (function () {
     * @param {any} [data] data to be passed to promise resolve func.
     * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var extendVolume = (name, groupName, physicalVolumeLocation, newSize, data) =>
+    var extendVolumeWith = (name, groupName, physicalVolumeLocation, newSize, data) =>
         spawn('lvextend', [`-L+${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
+            .then(preparePayload(data))
+
+    /**
+    * @param {string} name logical volume name
+    * @param {string} groupName name of the volume group
+    * @param {string} physicalVolumeLocation location of the logical volume (ex. /dev)
+    * @param {string|number} newSize add size of volume (larger than the current size)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
+    */
+    var extendVolumeTo = (name, groupName, physicalVolumeLocation, newSize, data) =>
+        spawn('lvextend', [`-L ${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
             .then(preparePayload(data))
 
     /**
@@ -84,8 +96,20 @@ module.exports = (function () {
     * @param {any} [data] data to be passed to promise resolve func.
     * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
-    var reduceVolume = (name, groupName, physicalVolumeLocation, newSize, data) =>
+    var reduceVolumeWith = (name, groupName, physicalVolumeLocation, newSize, data) =>
         spawn('lvreduce', ['-f', `-L-${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
+            .then(preparePayload(data))
+
+    /**
+    * @param {string} name logical volume name
+    * @param {string} groupName name of the volume group
+    * @param {string} physicalVolumeLocation location of the logical volume (ex. /dev)
+    * @param {string|number} newSize remove size of volume (less than the current size)
+    * @param {any} [data] data to be passed to promise resolve func.
+    * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
+    */
+    var reduceVolumeTo = (name, groupName, physicalVolumeLocation, newSize, data) =>
+        spawn('lvreduce', ['-f', `-L ${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
             .then(preparePayload(data))
 
     /**
@@ -108,8 +132,10 @@ module.exports = (function () {
         createLogicalVolume,
         formatLogicalVolume,
         mountVolume,
-        extendVolume,
-        reduceVolume,
+        extendVolumeWith,
+        extendVolumeTo,
+        reduceVolumeWith,
+        reduceVolumeTo,
         removeVolume
     };
 }());

@@ -27,11 +27,11 @@ lvm.formatLogicalVolume('lv_name', 'volume_group_name', 'ext3', '/dev', { some: 
 //5. Mount LV
 lvm.mountVolume('lv_name', 'volume_group_name', 'ext3', '/mnt/mount_point_name', '/dev', { some: 'data' }).then(({ data, result }) => console.log(data.some, result));
 
-//6. Extend LV with 5GB
-lvm.extendVolume('lv_name', 'volume_group_name', '/dev', 5, { some: 'data' }).then(({ data, result }) => console.log(data.some, result));
+//6. Extend LV with 5GB (you can also use extendVolumeTo to extend to the given size)
+lvm.extendVolumeWith('lv_name', 'volume_group_name', '/dev', 5, { some: 'data' }).then(({ data, result }) => console.log(data.some, result));
 
-//7. Reduce LV with 5GB
-lvm.reduceVolume('lv_name', 'volume_group_name', '/dev', 5, { some: 'data' }).then(({ data, result }) => console.log(data.some, result));
+//7. Reduce LV with 5GB (you can also use reduceVolumeTo to reduce to the given size)
+lvm.reduceVolumeWith('lv_name', 'volume_group_name', '/dev', 5, { some: 'data' }).then(({ data, result }) => console.log(data.some, result));
 
 //8. Remove LV
 lvm.removeVolume('/mnt/mount_point_name', 'lv_name', 'volume_group_name', '/dev', { some: 'data' }).then(({ data, result }) => console.log(data.some, result));
