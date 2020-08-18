@@ -2,7 +2,6 @@
 
 const spawn = require('./spawn');
 const fs = require('fs');
-const { rejects } = require('assert');
 
 module.exports = (function () {
     function preparePayload(data, prevResult) {
