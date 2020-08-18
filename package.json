@@ -1,6 +1,6 @@
 {
   "name": "node-lvm",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Simple Node Logical Volume Manager",
   "main": "index.js",
   "scripts": {

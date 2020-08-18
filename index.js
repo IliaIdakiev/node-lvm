@@ -1,6 +1,8 @@
 'use strict';
 
 const spawn = require('./spawn');
+const fs = require('fs');
+const { rejects } = require('assert');
 
 module.exports = (function () {
     function preparePayload(data, prevResult) {
@@ -58,11 +60,17 @@ module.exports = (function () {
     * @param {any} [data] data to be passed to promise resolve func.
     * @return {Promise<{ data: any, result: string[] }>} Promise if resolved it will contain the data that was passed to the fn and the cmd results
     */
-    var mountVolume = (name, groupName, fileSystem, mountPath, physicalVolumeLocation, data) =>
-        spawn('mkdir', [mountPath]).then(
-            result => spawn('mount', ['-t', fileSystem, `${physicalVolumeLocation}/${groupName}/${name}`, mountPath])
-                .then(preparePayload(data, result))
-        )
+    var mountVolume = (name, groupName, fileSystem, mountPath, physicalVolumeLocation, data) => {
+        return new Promise(function (resolve, reject) {
+            fs.exists(mountPath, function (exists) {
+                const createDirFn = exists ? function () { return Promise.resolve(); } : function () { return spawn('mkdir', [mountPath]) };
+                createDirFn().then(
+                    result => spawn('mount', ['-t', fileSystem, `${physicalVolumeLocation}/${groupName}/${name}`, mountPath])
+                        .then(preparePayload(data, result))
+                ).then(data => resolve(data)).catch(err => reject(err));
+            });
+        });
+    }
 
     /**
     * @param {string} name logical volume name
