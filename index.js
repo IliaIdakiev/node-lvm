@@ -85,7 +85,7 @@ module.exports = (function () {
     * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
     var extendVolumeTo = (name, groupName, physicalVolumeLocation, newSize, data) =>
-        spawn('lvextend', [`-L ${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
+        spawn('lvextend', [`-L`, `${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
             .then(preparePayload(data))
 
     /**
@@ -109,7 +109,7 @@ module.exports = (function () {
     * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
     var reduceVolumeTo = (name, groupName, physicalVolumeLocation, newSize, data) =>
-        spawn('lvreduce', ['-f', `-L ${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
+        spawn('lvreduce', ['-f', `-L`, `${newSize}G`, `${physicalVolumeLocation}/${groupName}/${name}`])
             .then(preparePayload(data))
 
     /**
