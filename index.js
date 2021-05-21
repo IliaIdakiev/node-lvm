@@ -133,6 +133,13 @@ module.exports = (function () {
                 .then(preparePayload(data, result))
         )
 
+    /**
+     * @param {string} groupName name of the volume group
+     * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
+     */
+    var removeVolumeGroup = (groupName) => spawn('vgremove', [groupName]).then(preparePayload(data))
+
+
     return {
         createPhysicalVolume,
         createVolumeGroup,
@@ -143,6 +150,7 @@ module.exports = (function () {
         extendVolumeTo,
         reduceVolumeWith,
         reduceVolumeTo,
-        removeVolume
+        removeVolume,
+        removeVolumeGroup
     };
 }());
