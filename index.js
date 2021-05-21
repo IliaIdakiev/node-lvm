@@ -24,7 +24,7 @@ module.exports = (function () {
     * @return {Promise<{ data: any, result: string }>} Promise if resolved it will contain the data that was passed to the fn and the cmd result
     */
     var createVolumeGroup = (name, volumePath, data) =>
-        spawn('vgcreate', [name, volumePath]).then(preparePayload(data));
+        spawn('vgcreate', [name, volumePath, '-y']).then(preparePayload(data));
 
     /*3. Create the logical volume*/
     /**
