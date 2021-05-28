@@ -3,6 +3,7 @@
   "version": "4.0.2",
   "description": "Simple Node Logical Volume Manager",
   "main": "index.js",
+  "typings": "./types/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/IliaIdakiev/node-lvm/issues"
   },
-  "homepage": "https://github.com/IliaIdakiev/node-lvm#readme"
+  "homepage": "https://github.com/IliaIdakiev/node-lvm#readme",
+  "devDependencies": {
+    "typescript": "^4.2.4"
+  }
 }
